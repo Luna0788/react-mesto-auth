@@ -1,7 +1,7 @@
 import React from 'react';
 import UserDataForm from "./UserDataForm";
 
-function Login() {
+function Login({ onLogin }) {
     const [formValue, setFormValue] = React.useState({
         email: '',
         password: ''
@@ -16,6 +16,12 @@ function Login() {
         });
     }
 
+    function handleSubmit(e) {
+        e.preventDefault();
+        if (!formValue.email || !formValue.password) return;
+        onLogin(formValue.email, formValue.password);
+    }
+
     return (
          <UserDataForm 
             title={"Вход"}
@@ -23,6 +29,7 @@ function Login() {
             buttonText={"Войти"}
             formValue={formValue}
             onChange={onChange}
+            onSubmit={handleSubmit}
          />
     )
 }

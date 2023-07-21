@@ -115,8 +115,48 @@ function App() {
         .catch((err) => {
           setIsRegisterSuccsess(false);
           setIsInfoTooltipOpen(true);
-          console.log(err)
+          console.log(err);
         });
+  }
+
+  function handleLogin (email, password) {
+    auth.authorize(email, password)
+        .then((data) => {
+          if (data.token) {
+            localStorage.setItem('jwt', data.token);
+            setIsLoggedIn(true);
+            setUserEmail(email);
+            navigate("/", {replace: true});
+          }
+          else return;
+        })
+        .catch((err) => {
+          setIsRegisterSuccsess(false); //что-то пошло не так
+          setIsInfoTooltipOpen(true);
+          console.log(err);
+        })
+  }
+
+  function handleTokenCheck() {
+    if (localStorage.getItem("jwt")){
+      const token = localStorage.getItem("jwt");
+      auth.checkToken(token)
+          .then((res) => {
+            if (res) {
+              setIsLoggedIn(true);
+              setUserEmail(res.data.email);
+              navigate("/", {replace: true});
+            }
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+    }
+  }
+
+  function handleSignOut() {
+    localStorage.removeItem("jwt");
+    setIsLoggedIn(false);
   }
 
   const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = React.useState(false);
@@ -128,8 +168,12 @@ function App() {
   const [currentUser, setCurrentUser] = React.useState({});
   const [cards, setCards] = React.useState([]);
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+  const [userEmail, setUserEmail] = React.useState("");
   const navigate = useNavigate();
 
+  React.useEffect(() => {
+    handleTokenCheck();
+  }, [])
 
   React.useEffect(() => {
         api
@@ -158,7 +202,10 @@ function App() {
     
   <div>
     <CurrentUserContext.Provider value={currentUser}>
-      <Header/>
+      <Header
+        userEmail={ userEmail }
+        onSignOut={ handleSignOut }
+      />
       <Routes>
         <Route path="/" element={ 
           <ProtectedRouteElement 
@@ -177,7 +224,9 @@ function App() {
         <Route path="*" element={ isLoggedIn ? <Navigate to="/" replace/> : <Navigate to="/sign-in" replace /> } />
 
         <Route path="/sign-in" element={
-          <Login />
+          <Login 
+            onLogin={ handleLogin }
+          />
         } />
 
         <Route path="/sign-up" element={
